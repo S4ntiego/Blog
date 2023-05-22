@@ -9,15 +9,14 @@ import rehypePrettyCode from "rehype-pretty-code"
 import rehypeSlug from "rehype-slug"
 import remarkGfm from "remark-gfm"
 
-const computedFields: ComputedFields<string> | undefined = {
+const computedFields = {
   slug: {
     type: "string",
-    resolve: (doc: LocalDocument) => `/${doc._raw.flattenedPath}`,
+    resolve: (doc) => `/${doc._raw.flattenedPath}`,
   },
   slugAsParams: {
     type: "string",
-    resolve: (doc: LocalDocument) =>
-      doc._raw.flattenedPath.split("/").slice(1).join("/"),
+    resolve: (doc) => doc._raw.flattenedPath.split("/").slice(1).join("/"),
   },
 }
 

@@ -9,7 +9,7 @@ authors:
 
 ## Getting Started
 
-To build the project, we will be using the newest Next.js version available as of May 19, 2023 - 13.4 and utilise the new App Router that is now production-ready. To style the blog, we will use the Tailwind CSS library.
+To build the project, we will be using the newest Next.js version available as of May 19, 2023 - 13.4 and utilize the new App Router that is now production-ready. To style the blog, we will use the Tailwind CSS library.
 
 <MdxCallout>
   To get the most out of this tutorial, it is recommended that you have a basic
@@ -27,8 +27,8 @@ To build the project, we will be using the newest Next.js version available as o
 To create a new project, please follow the steps below:
 
 1.  Create a new folder in your preferred location. I'll name my folder "markdown."
-2.  Launch your IDE and open the previously created folder. If you're using Visual Studio Code, in the top control panel go to File -> Open Folder, find your folder, and click "Open."
-3.  Open the terminal. In the top control panel of Visual Studio Code, go to Terminal -> New Terminal. You can also create a new terminal using the following shortcut in VSCode: `` Ctrl Shift ` `` on Windows or `` ⌃ ⇧ ` `` on Mac.
+2.  Launch your IDE and open the previously created folder. If you're using Visual Studio Code, in the top menu go to File -> Open Folder, find your folder, and click "Open."
+3.  Open the terminal. In the top menu of Visual Studio Code, go to Terminal -> New Terminal. You can also create a new terminal using the following shortcut in VSCode: `` Ctrl Shift ` `` on Windows or `` ⌃ ⇧ ` `` on Mac.
 4.  Run the following command to create a new [Next.js](https://nextjs.org/docs) project (if you would like to have your project inside of another folder in the current directory, don't add the `.` at the end of the command. Next.js will ask you how would you like to name the project and create a new folder inside the current directory for you):
 
 <MdxTerminal className="[&>*>*]:border-0 [&>*>*]:my-0">
@@ -39,7 +39,7 @@ npx create-next-app@latest .
 
 </MdxTerminal>
 
-On installation, you will see prompts regarding TypeScript, ESLint, Tailwind CSS, /src directory, App Router and default import alias, I recommend the following configuration:
+During the installation, you may encounter prompts regarding TypeScript, ESLint, Tailwind CSS, /src directory, App Router, and default import alias. I recommend the following configuration:
 
 <MdxTerminal className="[&>*>*]:border-0 [&>*>*]:my-0">
 
@@ -66,7 +66,7 @@ npm run dev
 
 </MdxTerminal>
 
-By default, the website should run on port 3000, but if the given port is already in use, the website will try to run on another port instead, which will be visible in your terminal message like this:
+By default, the website should run on port 3000. However, if the specified port is already in use, the website will attempt to run on another available port instead. You will see a message in your terminal indicating the new port assignment, similar to the following:
 
 <MdxTerminal className="[&>*>*]:border-0 [&>*>*]:my-0">
 
@@ -76,7 +76,7 @@ By default, the website should run on port 3000, but if the given port is alread
 
 </MdxTerminal>
 
-To visit the website, open your browser (I highly recommend using Google Chrome, due to the amazing Developer Tools) and type the above url in the address bar.
+To visit the website, open your browser (I highly recommend using Google Chrome due to its excellent Developer Tools) and type the above URL in the address bar.
 
 If everything went smoothly, you should see the following landing page:
 
@@ -90,7 +90,7 @@ If everything went smoothly, you should see the following landing page:
 
 ## Configuring Contentlayer
 
-[Contentlayer](https://www.contentlayer.dev/) will help us to validate and transform our content written in mdx into type-safe JSON data, that we will be able to easily import into our application (we are using Contentlayer to gain the advantage of working with MDX files - Markdown with embedded JSX).
+[Contentlayer](https://www.contentlayer.dev/) will help us validate and transform our content written in MDX into type-safe JSON data that can be easily imported into our application. We are utilizing Contentlayer to leverage the benefits of working with MDX files, which combine Markdown with embedded JSX.
 
 To install Contentlayer and the Next.js plugin, please run the following command in your terminal:
 
@@ -104,10 +104,10 @@ npm install contentlayer next-contentlayer
 
 ### Next.js Configuration
 
-To hook Contentlayer into the `next dev` and `next build` processes, we need to wrap the Next.js configuration using the withContentlayer method in next.config file.
+To integrate Contentlayer into the `next dev` and `next build` processes, we need to wrap the Next.js configuration using the withContentlayer method in next.config file.
 
-1. To be able to use the `import` syntax instead of `require`, change the extension of your next.config from `.js` to `.mjs`
-2. Change the code as presented below:
+1. To use the `import` syntax instead of `require`, change the extension of your next.config from `.js` to `.mjs`
+2. Update the code as shown below:
 
 ```js
 // next.config.mjs
@@ -177,7 +177,7 @@ To ensure that each build of the app will have the latest generated data, we hav
 
 ### Define content schema
 
-In this project, we will build a very simple blog. For that, we will need to define the schema of our posts, so let's create a `contentlayer.config.ts` file in the root directory of our project, and add the following content that will define our `Post`:
+In this project, we will build a very simple blog. To accomplish that, we need to define the schema of our posts. Let's create a `contentlayer.config.ts` file in the root directory of our project and add the following content, which will define our `Post`:
 
 ```js
 // contentlayer.config.ts
@@ -359,11 +359,11 @@ export default async function BlogPage() {
   changes.
 </MdxCallout>
 
-- In the code above, we are importing `allPosts` from `contentlayer/generated`, this is where our content lives. We are also importing our date helper function and exporting metadata, which is an abstract of our website's content and is used to attach a title (in this case) to the site. Title is what users see when they click to enter our website from search results, it is also one of the main elements Google uses to understand the content of our page.
+- In the code above, we are importing `allPosts` from `contentlayer/generated`. This is where our content resides. Additionally, we import our date helper function and export metadata, which represents a summary of our website's content. This metadata is used to attach a title (in this case) to the site. The title is what users see when they click to enter our website from search results. It is also one of the key elements Google employs to comprehend the content of our page.
 
-- Then, we are importing all of our posts by running a simple function `const posts = allPosts.filter((post) => post.published)`. We are filtering our content to include only the posts that are ready to be published (defaults to true, unless we would like to state otherwise in each post).
+- Then, we import all of our posts by executing a simple function: `const posts = allPosts.filter((post) => post.published)`. We filter our content to include only the posts that are ready to be published, which defaults to true unless stated otherwise in each post.
 
-- At the end, we are adding structure to our post by using html elements styled using the Tailwind CSS library. We are conditionally rendering our posts by using the `ternary operator`, if posts exist, then we want to map over all of them and render each post's date, description and title with the link to view it's body, which we will configure in a second, if posts don't exist, we return a simple paragraph that informs the user that no posts are published yet:
+- At the end, we add structure to our post by using HTML elements styled using the Tailwind CSS library. We conditionally render our posts using the `ternary operator`. If posts exist, we map over all of them and render each post's date, description, and title with a link to view its body, which we will configure in a moment. If posts don't exist, we return a simple paragraph informing the user that no posts are published yet.:
   `{posts?.length ? () : ()}`
 
 ### Running the server and generating content
@@ -553,7 +553,7 @@ If everything went smoothly, you should see the following view after clicking on
 
 Now you can customize the styling directly inside the `my-first-post.mdx` by using the Markdown syntax. Please find the cheatsheet right there: [Markdown Cheatsheet](https://commonmark.org/help/).
 
-You can create your own schemas and add field such as Authors, Categories, sort posts in descending order, add your own jsx components and embed them directly in your content.
+You can create your own schemas and add fields such as Authors and Categories. You can also sort posts in descending order, add your own JSX components, and embed them directly in your content.
 
 ### Have fun and keep learning!
 

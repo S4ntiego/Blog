@@ -24,7 +24,8 @@ export default async function BlogPage() {
             Coding Chronicles
           </h1>
           <p className="text-xl text-muted-foreground">
-            Welcome to my personal space on the internet. Enjoy the content!
+            Programming, <span className="line-through">explosions</span>,
+            gaming, calisthenics, and so much more.
           </p>
         </div>
       </div>

@@ -1,6 +1,9 @@
 lockfileVersion: '6.0'
 
 dependencies:
+  '@types/date-fns':
+    specifier: ^2.6.0
+    version: 2.6.0
   '@vercel/analytics':
     specifier: ^1.0.1
     version: 1.0.1
@@ -13,6 +16,9 @@ dependencies:
   contentlayer:
     specifier: ^0.3.2
     version: 0.3.2(esbuild@0.17.19)(typescript@5.0.4)
+  date-fns:
+    specifier: ^2.30.0
+    version: 2.30.0
   lucide-react:
     specifier: ^0.217.0
     version: 0.217.0(react@18.2.0)
@@ -1292,6 +1298,13 @@ packages:
     resolution: {integrity: sha512-veQTnWP+1D/xbxVrPC3zHnCZRjSrKfhbMUlEA43iMZLu7EsnTtkJklIuwrCPbOi8YkvDQAiW05VQQFvvz9oieQ==}
     dependencies:
       '@types/estree': 1.0.1
+    dev: false
+
+  /@types/date-fns@2.6.0:
+    resolution: {integrity: sha512-9DSw2ZRzV0Tmpa6PHHJbMcZn79HHus+BBBohcOaDzkK/G3zMjDUDYjJIWBFLbkh+1+/IOS0A59BpQfdr37hASg==}
+    deprecated: This is a stub types definition for date-fns (https://github.com/date-fns/date-fns). date-fns provides its own type definitions, so you don't need @types/date-fns installed!
+    dependencies:
+      date-fns: 2.30.0
     dev: false
 
   /@types/debug@4.1.7:

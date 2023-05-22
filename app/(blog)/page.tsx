@@ -21,7 +21,7 @@ export default async function BlogPage() {
       <div className="flex flex-col items-start gap-4 md:flex-row md:justify-between md:gap-8">
         <div className="flex-1 space-y-4">
           <h1 className="inline-block font-cal font-extrabold text-4xl tracking-tight lg:text-5xl">
-            Adam Książek's Blog
+            Adam Książek&apos;s Blog
           </h1>
           <p className="text-xl text-muted-foreground">
             Welcome to my personal space on the internet. Enjoy the content!

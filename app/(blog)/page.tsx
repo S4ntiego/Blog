@@ -4,14 +4,20 @@ import { allPosts } from "contentlayer/generated"
 import { compareDesc } from "date-fns"
 
 import { formatDate } from "@/lib/utils"
+import SearchBar from "@/components/searchBar"
 
 export const metadata = {
   title: "Blog",
 }
 
-export default async function BlogPage() {
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: { post: string }
+}) {
+  const search = searchParams.post ?? ""
   const posts = allPosts
-    .filter((post) => post.published)
+    .filter((post) => post.published && post.title.includes(search))
     .sort((a, b) => {
       return compareDesc(new Date(a.date), new Date(b.date))
     })
@@ -30,6 +36,7 @@ export default async function BlogPage() {
         </div>
       </div>
       <hr className="my-8" />
+      <SearchBar className="mb-8" />
       {posts?.length ? (
         <div className="grid gap-10 sm:grid-cols-2">
           {posts.map((post, index) => (

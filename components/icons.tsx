@@ -2,6 +2,7 @@ import {
   BookOpen,
   Menu,
   Orbit,
+  Search,
   Terminal,
   X,
   type Icon as LucideIcon,
@@ -14,5 +15,6 @@ export const Icons = {
   close: X,
   hamburgerMenu: Menu,
   logo: Orbit,
+  search: Search,
   terminal: Terminal,
 }

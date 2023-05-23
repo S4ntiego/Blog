@@ -17,7 +17,11 @@ export default async function BlogPage({
 }) {
   const search = searchParams.post ?? ""
   const posts = allPosts
-    .filter((post) => post.published && post.title.includes(search))
+    .filter(
+      (post) =>
+        post.published &&
+        post.title.toLowerCase().includes(search.toLowerCase())
+    )
     .sort((a, b) => {
       return compareDesc(new Date(a.date), new Date(b.date))
     })

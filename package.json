@@ -21,10 +21,14 @@
     "next-themes": "^0.2.1",
     "react": "link:@vercel/analytics/react",
     "react-dom": "18.2.0",
+    "remark-autolink-headings": "^7.0.1",
+    "remark-parse": "^10.0.2",
+    "remark-slug": "^7.0.1",
     "shiki": "^0.14.2",
     "tailwind-merge": "^1.12.0",
     "tailwindcss-animate": "^1.0.5",
-    "typescript": "5.0.4"
+    "typescript": "5.0.4",
+    "unified": "^10.1.2"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^3.7.2",

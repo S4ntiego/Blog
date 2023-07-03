@@ -5,10 +5,12 @@ import rehypeSlug from "rehype-slug"
 import remarkGfm from "remark-gfm"
 
 const computedFields = {
+  //in case of content -> blog -> blog.mdx it will be /blog/blog, flattenedPath is the part after contentDirPath
   slug: {
     type: "string",
     resolve: (doc) => `/${doc._raw.flattenedPath}`,
   },
+  //in case of content -> blog -> blog.mdx it will be blog because contentDirPath is .content/ and it is not being included in raw path
   slugAsParams: {
     type: "string",
     resolve: (doc) => doc._raw.flattenedPath.split("/").slice(1).join("/"),

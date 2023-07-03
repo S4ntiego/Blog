@@ -1,0 +1,468 @@
+---
+title: Implement the Table of Contents in your blog website
+description: Use remark, unist, and mdast to create an interactive Table of Contents for your markdown-powered blog.
+image: /images/blog/toc/toc.svg
+date: "2023-07-03"
+authors:
+  - santiego
+---
+
+## System Requirements & Libraries
+
+- [Node.js 16.8](https://nodejs.org/en) or later.
+- Computer with macOS, Windows, or Linux installed.
+- Integrated development environment (IDE) of your choice - I highly recommend [Visual Studio Code](https://code.visualstudio.com/) (free) or [WebStorm](https://www.jetbrains.com/webstorm/) (paid/30-day trial). Throughout this tutorial I will be using Visual Studio Code.
+
+To follow the tutorial, you will need the to install the following libraries:
+
+```code
+npm install remark unist-util-visit mdast-util-to-string
+```
+
+## Introduction
+
+To be able to prepare the Table of Contents (TOC) from our content, we will need to follow the steps described below:
+
+1. Transform the content into an Abstract Syntax Tree (AST) with the help of the `remark` library,
+2. Traverse the tree using the `unist-util-visit` library to retrieve headings,
+3. Parse the text, and generate IDs for each heading in order to implement the scroll-to-section functionality.
+
+After processing the content, we will end up with the array containing headings titles, depth of each heading, id, and children arrays. Most of this tutorial will be based on the [Create an Interactive Table of Contents for a Next.js Blog with Remark](https://claritydev.net/blog/nextjs-blog-remark-interactive-table-of-contents) blog post written by Alex Khomenko, but as I struggled to understand some parts of that tutorial, I would like to try to provide further explanations for each step. This guide is also based on the content generated with the help of Contentlayer. To get to the starting point, you can use your own Contentlayer blog, or follow my [previous tutorial](https://blog-sigma-seven-44.vercel.app/blog/nextjs-mdx-blog).
+
+### Content, Node, and File concepts
+
+Let's begin our journey by exploring the content. This is our blog post **literal content** inside the .mdx file that is being processed by the Contentlayer (eg. table-of-contents.mdx):
+
+```code
+## Getting Started
+
+To build the project, we will be using the newest Next.js version available as of July, 2023 - 13.4 and utilize the new App Router that is now production-ready. For styling we will use the Tailwind CSS library.
+
+### System Requirements
+
+- [Node.js 16.8](https://nodejs.org/en) or later.
+- Computer with macOS, Windows, or Linux installed.
+- Integrated development environment (IDE) of your choice - I highly recommend [Visual Studio Code](https://code.visualstudio.com/) (free) or [WebStorm](https://www.jetbrains.com/webstorm/) (paid/30-day trial). Throughout this tutorial I will be using Visual Studio Code.
+
+### Create a new Next.js project
+
+First of all, we will have to install the following libraries
+```
+
+Then, let's explore the the **content** that we will pass to our `remark` processor. After generation by the Contentlayer, the content that we want to process with remark is available under the **post.body.raw** [attribute](https://www.contentlayer.dev/docs/sources/files/generated-data-bd588cf1):
+
+```code
+[1]
+[1] ## Getting Started
+[1]
+[1] To build the project, we will be using the newest Next.js version available as of July, 2023 - 13.4 and utilize the new App Router that is now production-ready. For styling we will use the Tailwind CSS library.
+[1]
+[1] ### System Requirements
+[1]
+[1] - [Node.js 16.8](https://nodejs.org/en) or later.
+[1] - Computer with macOS, Windows, or Linux installed.
+[1] - Integrated development environment (IDE) of your choice - I highly recommend [Visual Studio Code](https://code.visualstudio.com/) (free) or [WebStorm](https://www.jetbrains.com/webstorm/) (paid/30-day trial). Throughout this tutorial I will be using Visual Studio Code.
+[1]
+[1] ### Create a new Next.js project
+[1]
+[1] First of all, we will have to install the following libraries
+[1]
+```
+
+Then, while invoking the visitor function (our custom remark plugin) with the body.raw content, remark will provide us two parameters - `node` and `file`. Node is the tree that we will want to traverse, and file is the final output that we will want to modify to generate the array for the Table of Contents.
+
+This is how our `node` delivered by remark looks like. As we can see, it retrieves all the headings, paragraphs, lists, and other elements from the raw body of our blog post:
+
+```code
+[1] {
+[1]   type: 'root',
+[1]   children: [
+[1]     {
+[1]       type: 'heading',
+[1]       depth: 2,
+[1]       children: [Array],
+[1]       position: [Object]
+[1]     },
+[1]     { type: 'paragraph', children: [Array], position: [Object] },
+[1]     {
+[1]       type: 'heading',
+[1]       depth: 3,
+[1]       children: [Array],
+[1]       position: [Object]
+[1]     },
+[1]     {
+[1]       type: 'list',
+[1]       ordered: false,
+[1]       start: null,
+[1]       spread: false,
+[1]       children: [Array],
+[1]       position: [Object]
+[1]     },
+[1]     {
+[1]       type: 'heading',
+[1]       depth: 3,
+[1]       children: [Array],
+[1]       position: [Object]
+[1]     },
+[1]     { type: 'paragraph', children: [Array], position: [Object] }
+[1]   ],
+[1]   position: {
+[1]     start: { line: 1, column: 1, offset: 0 },
+[1]     end: { line: 15, column: 1, offset: 730 }
+[1]   }
+[1] }
+```
+
+And this is how our initial `file` (in [VFile](https://github.com/vfile/vfile) format used for text processing that tracks metadata such as `path/cwd` and `value`) delivered by the remark looks like:
+
+```code
+[1] VFile {
+[1]   data: {},
+[1]   messages: [],
+[1]   history: [],
+[1]   cwd: '/Users/adamksiazek/Downloads/Patterns/mdxblog',
+[1]   value: '\n' +
+[1]     '## Getting Started\n' +
+[1]     '\n' +
+[1]     'To build the project, we will be using the newest Next.js version available as of July, 2023 - 13.4 and utilize the new App Router that is now production-ready. For styling we will use the Tailwind CSS library.\n' +
+[1]     '\n' +
+[1]     '### System Requirements\n' +
+[1]     '\n' +
+[1]     '- [Node.js 16.8](https://nodejs.org/en) or later.\n' +
+[1]     '- Computer with macOS, Windows, or Linux installed.\n' +
+[1]     '- Integrated development environment (IDE) of your choice - I highly recommend [Visual Studio Code](https://code.visualstudio.com/) (free) or [WebStorm](https://www.jetbrains.com/webstorm/) (paid/30-day trial). Throughout this tutorial I will be using Visual Studio Code.\n' +
+[1]     '\n' +
+[1]     '### Create a new Next.js project\n' +
+[1]     '\n' +
+[1]     'First of all, we will have to install the following libraries\n'
+[1] }
+```
+
+### Libraries and concepts behind generating the TOC
+
+Let's also explain some important concepts/libraries that will help us to create the Table of Concepts:
+
+- [remark](https://github.com/remarkjs/remark) - a tool that transforms markdown with plugins, which can inspect and change the markup. Remark takes our raw mdx content, transfers it to Abstract Syntax Tree (AST)(MDAST in case of Remark) to make it easy for a plugin (custom or provided by the community) to inspect, change, and then retrieve the data in desired format. It can, for example, transform markdown to html or just modify the markdown and output another markdown.
+
+- [unified](https://github.com/unifiedjs/unified) - the core project that transforms content with Abstract Syntax Trees, Remark is built upon Unified and just adds the Markdown support. There are other tools based on unified that can transform HTML (Rehype) or natural language (retext).
+
+- [mdast](https://github.com/syntax-tree/mdast) - there are different kind of Abstract Syntax Trees, MDAST is the one that remark uses (Markdown AST). It is a specific implementation of the unist AST format designed for representing Markdown in the syntax tree. It extends the unist format by adding additional node types and properties specific to Markdown syntax, such as headings, paragraphs, lists, links, and emphasis.
+
+- [unist](https://github.com/syntax-tree/unist) - AST format that provides a common structure for representing syntax trees of different languages. It is universal and structured format crafted to be used by multiple libraries and tools. Unist provides a basic set of node types and utilities for working with syntax trees.
+
+## Logic behind the Table of Contents
+
+Okay, it is the high time to start writing the code. Please create the `toc.ts` file inside the `lib` folder. Inside the file, please write the first, main function called `getHeadings`, which accepts content parameter and which will be responsible for calling our custom plugin and processing the content to retrieve headings.
+
+```ts
+export async function getHeadings(content) {
+  const processedContent = await remark().use(headingAST).process(content)
+
+  return processedContent.data.headings
+}
+```
+
+- `remark()` -> initializes the remark processor.
+
+- `use(headingTree)` -> we did not write the functionality of the headingAST function yet, but it will be our custom plugin responsible for returning the visitor function, which will allow us to retrieve headers. Use() registers the headingAST plugin with the remark processor. Plugins are used to extend the functionality of the processor by adding specific parsing or processing behaviors.
+
+- `process(content)` -> method which triggers the parsing and processing of the Markdown content using plugins. It converts the Markdown content into an abstract syntax tree (AST), where each element of the content is represented as a structured node with specific properties.
+
+Now, let's write our `headingAST` higher-order function that will return the visitor function with `node` and `file` parameters described previously. Node is our input and file.data.headings is our modified output returned by the getHeadings function.
+
+```ts
+export function headingAST() {
+  return (node, file) => {
+    file.data.headings = extractHeadings(node)
+  }
+}
+```
+
+Let's move to the helper function called `extractHeadings`, which accepts the node, and which will be responsible for traversing & adding IDs to headings. We put the extraction logic inside the helper function to improve readability and maintability. Please find the `extractHeadings` function below, which accepts the root(node) parameter:
+
+```ts
+function extractHeadings(tree) {
+  const nodes = {}
+  const output = []
+  const indexMap = {}
+  visit(tree, "heading", (node) => {
+    addID(node, nodes)
+    transformNode(node, output, indexMap)
+  })
+
+  return output
+}
+```
+
+As described previously, our syntax tree follows the unist/mdast standard, thus we can use the [unist-util-visit](https://github.com/syntax-tree/unist-util-visit) library to traverse it.
+
+Function `extractHeadings` initializes nodes, output, and indexMap consts. Purpose of nodes object is to keep track of the unique IDs to prevent duplicates in case we have the equally named headings. Output array is used to store the transformed heading nodes, each transformed node object will be pushed into the output array. IndexMap is used to organize the transformed nodes hierarchically based on the heading depth, so that parent nodes can be associated with their children nodes (eg. h3 heading will be associated as a descendant of the h2 heading written above it).
+
+`extractHeadings` uses the `visit` function provided by the `unist-util-visit` library to traverse the tree and find nodes of type "heading". For each heading, it generate and assign a unique ID based on its content, and then it invokes the `transformNode` function to create a transformed node object representing the heading, based on its properties like value, depth, data, and children. Depth is equal to the type of heading (h1, h2, h3 and its "#" representation equivalent in Markdown).
+
+Let's implement the `addId` helper function:
+
+```ts
+function addID(node, nodes) {
+  const id = node.children.map((c) => c.value).join("")
+  nodes[id] = (nodes[id] || 0) + 1
+  node.data = node.data || {
+    headingProperties: {
+      id: `${id}${nodes[id] > 1 ? ` ${nodes[id] - 1}` : ""}`
+        .replace(/[^a-zA-Z\d\s-]/g, "")
+        .split(" ")
+        .join("-")
+        .toLowerCase(),
+    },
+  }
+}
+```
+
+And now, let's implement the transformNode helper function:
+
+```ts
+function transformNode(node, output, indexMap) {
+  const transformedNode = {
+    value: toString(node),
+    depth: node.depth,
+    data: node.data,
+    children: [],
+  }
+
+  if (node.depth === 2) {
+    output.push(transformedNode)
+    indexMap[node.depth] = transformedNode
+  } else {
+    const parent = indexMap[node.depth - 1]
+    if (parent) {
+      parent.children.push(transformedNode)
+      indexMap[node.depth] = transformedNode
+    }
+  }
+}
+```
+
+Each heading `node` found by the visitor function looks like this, it is an object with type, depth, children and position. If depth is equal to 2, then the header is equal to ##, 3 equal to ### and so on:
+
+```code
+[1] {
+[1]   type: 'heading',
+[1]   depth: 2,
+[1]   children: [ { type: 'text', value: 'Getting Started', position: [Object] } ],
+[1]   position: {
+[1]     start: { line: 2, column: 1, offset: 1 },
+[1]     end: { line: 2, column: 19, offset: 19 }
+[1]   }
+[1] }
+```
+
+Considering the structure of the `node`, we want to retrieve the children value, and then join the values inside the received array, to create a string:
+
+```ts
+const id = node.children.map((c) => c.value).join("")
+```
+
+Then, we want to track unique ids, so we add the id to nodes object, if it exist, we add +1, and if not, we initialize it with the number 1:
+
+```ts
+nodes[id] = (nodes[id] || 0) + 1
+```
+
+At the end, we want to add another object to our node, which will be our id, we assign it to the data property. To prevent duplicated processing, we first check if node.data already exist, if not, then we attach the new object called headingID, and the id property:
+
+```ts
+node.data = node.data || {
+  headingID: {
+    id: `${id}${nodes[id] > 1 ? ` ${nodes[id] - 1}` : ""}`
+      .replace(/[^a-zA-Z\d\s-]/g, "")
+      .split(" ")
+      .join("-")
+      .toLowerCase(),
+  },
+}
+```
+
+Our id property is processed in the following order:
+
+1. We retrieve the value, which is basically a title of the heading, eg. `Create a new Ne!~t.js project`,
+2. If there is more than one heading with the exact title (tracked in the nodes array), then we are adding the appropriate number stored in the nodes lowered by one followed by the spacebar (so that the second heading will have 1 at the end, third 2, and so on), otherwise we are leaving the value as it is `Create a new Ne!~t.js project 1`,
+3. We use regex to match any character that is not a letter, a digit, a whitespacer character (space, tab, etc.), or a hyphen to replace it with an empty string to ensure that the id contains only valid characters for an HTML 'id' attribute `Create a new Netjs project 1`,
+4. Then, we want to split our string with spacebars `[ 'Create', 'a', 'new', 'Netjs', 'project', '1' ]`,
+5. And join each word with "-" to create a string `Create-a-new-Netjs-project-1`,
+6. At the end, we want to make everything lowercase `create-a-new-netjs-project-1`.
+
+Now let's move to the other helper function, `transformNode`, which takes the `node` from the parsed Markdown Abstract Syntax Tree with the id property and transforms it into a format, that will make it easier for us to build a TOC.
+
+```ts
+import { toString } from "mdast-util-to-string"
+
+function transformNode(node, output, indexMap) {
+  const transformedNode = {
+    value: toString(node),
+    depth: node.depth,
+    data: node.data,
+    children: [],
+  }
+
+  if (node.depth === 2) {
+    output.push(transformedNode)
+    indexMap[node.depth] = transformedNode
+  } else {
+    const parent = indexMap[node.depth - 1]
+    if (parent) {
+      parent.children.push(transformedNode)
+      indexMap[node.depth] = transformedNode
+    }
+  }
+}
+```
+
+First, we declare a new object, which represents the transformed version of the current `node` that is being processed. We assign the original depth, data, empty children array, and as a value, we assign the retrieved header string `Create a new Ne!~t.js project` using the `toString` function from the `mdast-util-to-string` library. As the sole purpose of the library is to get the text inside of the heading, you can also use the syntax that we have used to retrieve the text for the id in the `addId` function:
+
+```ts
+value: node.children.map((c) => c.value).join("")
+```
+
+Then, we want to create a real table of contents structure with indentation. It is important to note that the given function will work only in case we maintain the correct structure of headings (h2 first, then h3, etc.).
+
+```ts
+if (node.depth === 2) {
+  output.push(transformedNode)
+  indexMap[node.depth] = transformedNode
+} else {
+  const parent = indexMap[node.depth - 1]
+  if (parent) {
+    parent.children.push(transformedNode)
+    indexMap[node.depth] = transformedNode
+  }
+}
+```
+
+Headings with the depth of 2 (h2) will be the starting point in our TOC, as it is not a good practice to put multiple h1 tags inside the markdown (SEO and accessibility related problems).
+
+If we encounter the h2 heading `if (node.depth === 2)`, we immediately push the related transformedNode (with its title, depth, and id inside the data property) to the final output array `output.push(transformedNode);`, and we also assign the transformedNode to "2" property of the indexMap object `indexMap[node.depth] = transformedNode;`.
+
+If we encounter the heading other than h2, we are looking for its parent, that should be already present in the indexMap object if we are structuring our headings properly `const parent = indexMap[node.depth - 1];`. If we find the parent heading, we push the transformedNode related to the relevant heading to the parent children array `parent.children.push(transformedNode);` and we also assign the transformedNode to the relevant depth property of the indexMap object `indexMap[node.depth] = transformedNode;`.
+
+To sum up, each time we encounter the **h2** heading, we are pushing the transformedNode to the final output, and we start creating another structure in the indexMap.
+
+Let's assume that we have 6 headings in our mdx file structured like that: h2 (Getting Started) -> h3 h3 -> h4 & h2 (Hello) -> h3, this is how our final structure returned by the `getHeadings(content)` function will look like:
+
+```code
+[1] [
+[1]   {
+[1]     value: 'Getting Started',
+[1]     depth: 2,
+[1]     data: { headingProperties: { id: 'getting-started' } },
+[1]         children: [ {
+[1]             value: 'System Requirements',
+[1]             depth: 3,
+[1]             data: { headingProperties: { id: 'system-requirements' } },
+[1]             children: []
+[1]         },
+[1]         {
+[1]             value: 'Create a new Next.js project',
+[1]             depth: 3,
+[1]             data: { headingProperties: { id: 'create-a-new-nextjs-project' } },
+[1]             children: [ {
+[1]                 value: 'Create a new Ne!~t.js project',
+[1]                 depth: 4,
+[1]                 data: { headingProperties: { id: 'create-a-new-netjs-project' } },
+[1]                 children: []
+[1]             } ]
+[1]         },
+[1]         {
+[1]             value: 'Create a new Ne!~t.js project',
+[1]             depth: 3,
+[1]             data: { headingProperties: { id: 'create-a-new-netjs-project-1' } },
+[1]             children: []
+[1]         } ]
+[1]   },
+[1]   {
+[1]     value: 'Hello',
+[1]     depth: 2,
+[1]     data: { headingProperties: { id: 'hello' } },
+[1]     children: [ {
+            value: 'Hi',
+            depth: 3,
+            data: { headingProperties: { id: 'hi } },
+            children: []
+        } ]
+[1]   }
+[1] ]
+```
+
+Summing up, for each heading we have: value, depth, data (id), and children array.
+Now we are ready to render our table of contents based on the generated array.
+
+## Table of Contents Component
+
+As we have finished the logic behind generating the array for the Table of Concept component, we can proceed further and create a `toc.tsx` component inside the `components` folder.
+
+Inside the file, let's create the `TableOfContents` component, structured as an arrow function, which accepts nodes (our array generated by the `getHeadings` function):
+
+```ts
+export const TableOfContents = ({ nodes }) => {
+  if (!nodes?.length) {
+    return null
+  }
+
+  return (
+    <div>
+      <h3>Table of contents</h3>
+      {renderNodes(nodes)}
+    </div>
+  )
+}
+```
+
+We destructure ({}) the `nodes` parameter to use it directly in the component. Then, the function checks whether the `nodes` array contains any headings, if not, it returns null. If nodes array is not null, the TOC component returns a div with the main header "Table of contents", which wont be interactive and which will be placed at the top of our TOC. To render further, interactive parts of our table, we will use the recursive, helper function `renderNodes` described below:
+
+```ts
+function renderNodes(nodes) {
+  return (
+    <ul>
+      {nodes.map((node) => (
+        <li key={node.data.headingProperties.id}>
+          <a href={`#${node.data.headingProperties.id}`}>{node.value}</a>
+          {node.children?.length > 0 && renderNodes(node.children)}
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+`renderNodes` is a recursive function - a function that calls itself during its execution. It takes an array of nodes as input and generates an HTML list `ul` with each node as a list item `li`. For each heading, we generate a list item with the id key, and an anchor link, which also refers to the previously generated id. If node has children, the function will be called again with node.children as an argument. If we, for example, have a structure like: h2 -> h3 h3 & h2, then the function will run on the h2, then run twice on the h3 children, then move to the main loop again and run on the another h2.
+
+## Rendering the Table of Contents
+
+The final step of our journey intends to render the TOC component inside the blog post. Inside the `page.tsx` located in the `blog slug` folder, we have to import both the `getHeadings` function and `TableOfContents` component:
+
+```ts
+import { getHeadings } from "@/lib/toc"
+import { TableOfContents } from "@/components/toc"
+```
+
+Then, inside the async `PostPage` function, which is responsible for getting the post from params and rendering it, call the `getHeadings` function with `post.body.raw` parameter generated by the Contentlayer for given blog post and save the result in the `toc` const:
+
+```ts
+const toc = await getHeadings(post.body.raw)
+```
+
+The last step is to insert the TableOfContents component inside the return part of the `PostPage` function wherever you like, and pass the `toc` props, which will act as our `nodes` parameter:
+
+```ts
+<main className="container relative py-6 lg:gap-10 lg:py-10 xl:grid xl:grid-cols-[1fr_250px] max-w-6xl">
+  <div className="hidden text-sm xl:block">
+    <div className="sticky top-16 -mt-10 max-h-[calc(var(--vh)-4rem)] overflow-y-auto pt-10">
+      <TableOfContents nodes={toc} />
+    </div>
+  </div>
+</main>
+```
+
+Congratulations, you have finished the tutorial and successfully implemented the Table of Contents functionality in your blog. Feel free to further adjust the TOC with the custom styling or IntersectionObserver (highlighting the current heading).
+
+Have fun and keep learning!  
+Written by [**Adam Książek**](https://www.linkedin.com/in/adam-ksi%C4%85%C5%BCek-6538141a1/)

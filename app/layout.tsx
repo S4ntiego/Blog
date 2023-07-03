@@ -31,10 +31,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full w-full">
       <body
         className={cn(
-          "font-inter antialiased h-full bg-background box-border",
+          "font-inter antialiased h-full w-full bg-background box-border overflow-x-hidden",
           inter.variable,
           cal.variable
         )}
